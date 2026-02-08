@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Outer shadow ring -->
+    <path
+        android:fillColor="#8B7220"
+        android:pathData="M54,54m-42,0a42,42 0,1 1,84 0a42,42 0,1 1,-84 0"/>
+
+    <!-- Main gold coin -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M54,54m-38,0a38,38 0,1 1,76 0a38,38 0,1 1,-76 0"/>
+
+    <!-- Inner rim -->
+    <path
+        android:fillColor="#C9A227"
+        android:pathData="M54,54m-35,0a35,35 0,1 1,70 0a35,35 0,1 1,-70 0"/>
+
+    <!-- Center circle -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M54,54m-30,0a30,30 0,1 1,60 0a30,30 0,1 1,-60 0"/>
+
+    <!-- Highlight gradient effect (top) -->
+    <path
+        android:fillColor="#E6C75A"
+        android:fillAlpha="0.5"
+        android:pathData="M54,20 Q70,25 80,40 Q70,30 54,28 Q38,30 28,40 Q38,25 54,20 Z"/>
+
+    <!-- Letter F - Holographic Futuristic -->
+    <group
+        android:translateX="54"
+        android:translateY="54">
+
+        <!-- Shadow/glow layer -->
+        <path
+            android:fillColor="#C9A227"
+            android:fillAlpha="0.3"
+            android:pathData="M-8,-18 L-0,-18 L-0,17 L-8,17 Z"/>
+
+        <!-- Main F shape - angular cuts -->
+        <path
+            android:fillColor="#0B0B0D"
+            android:pathData="M-6,-16 L0,-16 L0,-13 L-4,-13 L-4,-3 L-6,-1 L-6,15 L-8,15 L-8,-16 Z"/>
+
+        <!-- Top bar - diagonal cut -->
+        <path
+            android:fillColor="#0B0B0D"
+            android:pathData="M-6,-16 L12,-16 L10,-13 L0,-13 Z"/>
+
+        <!-- Middle bar - slanted -->
+        <path
+            android:fillColor="#0B0B0D"
+            android:pathData="M-4,-4 L8,-4 L7,-1 L-4,-1 Z"/>
+
+        <!-- Bright gold edge highlight -->
+        <path
+            android:fillColor="#E6C75A"
+            android:pathData="M0,-16 L2,-16 L2,15 L0,15 Z"/>
+
+        <!-- Holographic segments -->
+        <path
+            android:fillColor="#E6C75A"
+            android:fillAlpha="0.7"
+            android:pathData="M10,-16 L12,-16 L12,-13 L10,-13 Z"/>
+
+        <path
+            android:fillColor="#E6C75A"
+            android:fillAlpha="0.5"
+            android:pathData="M7,-4 L9,-4 L9,-1 L7,-1 Z"/>
+
+        <!-- Tech dots pattern -->
+        <path
+            android:fillColor="#E6C75A"
+            android:pathData="M-8,6 m-0.8,0 a0.8,0.8 0,1 1,1.6 0 a0.8,0.8 0,1 1,-1.6 0"/>
+        <path
+            android:fillColor="#E6C75A"
+            android:pathData="M-8,10 m-0.8,0 a0.8,0.8 0,1 1,1.6 0 a0.8,0.8 0,1 1,-1.6 0"/>
+    </group>
+
+    <!-- Outer tech ring -->
+    <path
+        android:strokeColor="#E6C75A"
+        android:strokeWidth="1"
+        android:strokeAlpha="0.4"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M54,54m-45,0a45,45 0,1 1,90 0a45,45 0,1 1,-90 0"/>
+
+    <!-- Corner tech brackets -->
+    <group android:translateX="54" android:translateY="54">
+        <!-- Top left bracket -->
+        <path
+            android:fillColor="#E6C75A"
+            android:pathData="M-26,-26 L-22,-26 L-22,-24 L-24,-24 L-24,-22 L-26,-22 Z"/>
+        <!-- Top right bracket -->
+        <path
+            android:fillColor="#E6C75A"
+            android:pathData="M24,-26 L24,-22 L22,-22 L22,-24 L26,-24 L26,-26 Z"/>
+        <!-- Bottom right bracket -->
+        <path
+            android:fillColor="#E6C75A"
+            android:pathData="M24,26 L26,26 L26,22 L24,22 L24,24 L22,24 L22,26 Z"/>
+        <!-- Bottom left bracket -->
+        <path
+            android:fillColor="#E6C75A"
+            android:pathData="M-26,26 L-26,22 L-24,22 L-24,24 L-22,24 L-22,26 Z"/>
+    </group>
+</vector>
