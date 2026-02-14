@@ -107,4 +107,10 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
     private fun getCurrentYear(): Int {
         return Calendar.getInstance().get(Calendar.YEAR)
     }
+
+    // Update an expense
+    fun updateExpense(expense: Expense) {
+        repository.updateExpense(expense)
+        loadExpenses()
+    }
 }

@@ -44,4 +44,14 @@ class ExpenseRepository(context: Context) {
         val json = gson.toJson(expenses)
         sharedPreferences.edit().putString(KEY_EXPENSES, json).apply()
     }
+
+    // Update existing expense
+    fun updateExpense(expense: Expense) {
+        val expenses = getAllExpenses().toMutableList()
+        val index = expenses.indexOfFirst { it.id == expense.id }
+        if (index != -1) {
+            expenses[index] = expense
+            saveExpenses(expenses)
+        }
+    }
 }

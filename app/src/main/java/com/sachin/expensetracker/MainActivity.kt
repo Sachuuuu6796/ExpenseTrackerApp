@@ -4,17 +4,17 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -22,59 +22,39 @@ import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
 import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.background
 import android.app.Application
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.runtime.remember
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDefaults
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.shape.CircleShape
 
+// Custom colors - Robinhood Premium Theme
+val DeepBlack = Color(0xFF0B0B0D)
+val SoftBlack = Color(0xFF121214)
+val CharcoalBorder = Color(0xFF1C1C1E)
+val GoldAccent = Color(0xFFD4AF37)
+val MutedGold = Color(0xFFC9A227)
+val HighlightGold = Color(0xFFE6C75A)
+val WhiteText = Color(0xFFFFFFFF)
+val SecondaryGray = Color(0xFFA1A1A6)
+val MutedGray = Color(0xFF6E6E73)
 
-// Robinhood-inspired Premium Black & Gold Theme
-val DeepBlack = Color(0xFF0B0B0D)           // Background
-val SoftBlack = Color(0xFF121214)           // Cards/Surfaces
-val CharcoalBorder = Color(0xFF1C1C1E)      // Borders
-
-val GoldAccent = Color(0xFFD4AF37)          // Primary Gold
-val MutedGold = Color(0xFFC9A227)           // Secondary Gold
-val HighlightGold = Color(0xFFE6C75A)       // Bright highlights
-
-val WhiteText = Color(0xFFFFFFFF)           // Primary text
-val SecondaryGray = Color(0xFFA1A1A6)       // Secondary text
-val MutedGray = Color(0xFF6E6E73)           // Tertiary text
-
-// Custom color scheme
 private val DarkGoldColorScheme = darkColorScheme(
     primary = GoldAccent,
     onPrimary = DeepBlack,
     primaryContainer = SoftBlack,
     onPrimaryContainer = GoldAccent,
-
     secondary = MutedGold,
     onSecondary = DeepBlack,
     secondaryContainer = CharcoalBorder,
     onSecondaryContainer = HighlightGold,
-
     background = DeepBlack,
     onBackground = WhiteText,
-
     surface = SoftBlack,
     onSurface = WhiteText,
     surfaceVariant = CharcoalBorder,
     onSurfaceVariant = SecondaryGray,
-
     outline = CharcoalBorder,
-
     error = Color(0xFFCF6679),
     onError = DeepBlack
 )
@@ -109,7 +89,6 @@ fun MainNavigation(authViewModel: AuthViewModel = viewModel()) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpenseTrackerApp(
     authViewModel: AuthViewModel
@@ -119,7 +98,39 @@ fun ExpenseTrackerApp(
         ExpenseViewModel(context.applicationContext as Application)
     }
 
+    var currentScreen by remember { mutableStateOf("home") }
+
+    when (currentScreen) {
+        "home" -> HomeScreen(
+            viewModel = viewModel,
+            authViewModel = authViewModel,
+            onNavigateToReports = { currentScreen = "reports" },
+            onNavigateToSettings = { currentScreen = "settings" }
+        )
+        "reports" -> ReportsScreen(
+            viewModel = viewModel,
+            onBackClick = { currentScreen = "home" }
+        )
+        "settings" -> SettingsScreen(
+            onBackClick = { currentScreen = "home" },
+            authViewModel = authViewModel
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeScreen(
+    viewModel: ExpenseViewModel,
+    authViewModel: AuthViewModel,
+    onNavigateToReports: () -> Unit,
+    onNavigateToSettings: () -> Unit
+) {
+    val context = LocalContext.current
     var showAddDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
+    var expenseToEdit by remember { mutableStateOf<Expense?>(null) }
+
     val filteredExpenses = viewModel.getFilteredExpenses()
     val selectedMonth by viewModel.selectedMonth.collectAsState()
     val selectedYear by viewModel.selectedYear.collectAsState()
@@ -129,20 +140,17 @@ fun ExpenseTrackerApp(
         topBar = {
             TopAppBar(
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        AppLogo()
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text("ExT", color = WhiteText)
-                    }
+                    Text("ExT", color = WhiteText)
                 },
-                actions = {
-                    IconButton(onClick = { authViewModel.signOut() }) {
-                        Icon(
-                            Icons.Default.ExitToApp,
-                            contentDescription = "Logout",
-                            tint = GoldAccent
-                        )
-                    }
+                navigationIcon = {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    UserProfileIcon(
+                        onNavigateToReports = onNavigateToReports,
+                        onNavigateToSettings = onNavigateToSettings,
+                        onLogout = {
+                            authViewModel.signOut()
+                        }
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = SoftBlack,
@@ -166,7 +174,6 @@ fun ExpenseTrackerApp(
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            // Month/Year Selector
             MonthYearSelector(
                 selectedMonth = selectedMonth,
                 selectedYear = selectedYear,
@@ -176,7 +183,6 @@ fun ExpenseTrackerApp(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Balance Summary Card
             BalanceSummaryCard(
                 credit = viewModel.getTotalCredit(),
                 debit = viewModel.getTotalDebit(),
@@ -185,7 +191,6 @@ fun ExpenseTrackerApp(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Transaction list
             if (filteredExpenses.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -194,7 +199,7 @@ fun ExpenseTrackerApp(
                     Text(
                         "No transactions for this month.\nTap + to add one!",
                         color = SecondaryGray,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        textAlign = TextAlign.Center
                     )
                 }
             } else {
@@ -202,7 +207,11 @@ fun ExpenseTrackerApp(
                     items(filteredExpenses.sortedByDescending { it.date }) { expense ->
                         ExpenseItem(
                             expense = expense,
-                            onDelete = { viewModel.deleteExpense(expense) }
+                            onDelete = { viewModel.deleteExpense(expense) },
+                            onEdit = {
+                                expenseToEdit = expense
+                                showEditDialog = true
+                            }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
@@ -217,6 +226,21 @@ fun ExpenseTrackerApp(
             onAdd = { amount, category, description, type, date ->
                 viewModel.addExpense(amount, category, description, type, date)
                 showAddDialog = false
+            }
+        )
+    }
+
+    if (showEditDialog && expenseToEdit != null) {
+        EditExpenseDialog(
+            expense = expenseToEdit!!,
+            onDismiss = {
+                showEditDialog = false
+                expenseToEdit = null
+            },
+            onUpdate = { updatedExpense ->
+                viewModel.updateExpense(updatedExpense)
+                showEditDialog = false
+                expenseToEdit = null
             }
         )
     }
@@ -239,7 +263,6 @@ fun MonthYearSelector(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Previous month button
         IconButton(onClick = {
             if (selectedMonth == 0) {
                 onMonthChange(11)
@@ -255,7 +278,6 @@ fun MonthYearSelector(
             )
         }
 
-        // Month and Year display
         Text(
             text = "${months[selectedMonth]} $selectedYear",
             style = MaterialTheme.typography.titleLarge,
@@ -263,7 +285,6 @@ fun MonthYearSelector(
             fontWeight = FontWeight.Bold
         )
 
-        // Next month button
         IconButton(onClick = {
             if (selectedMonth == 11) {
                 onMonthChange(0)
@@ -296,7 +317,6 @@ fun BalanceSummaryCard(
         Column(
             modifier = Modifier.padding(20.dp)
         ) {
-            // Net Balance
             Text(
                 "Net Balance",
                 style = MaterialTheme.typography.labelMedium,
@@ -311,12 +331,10 @@ fun BalanceSummaryCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Credit and Debit Row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Credit
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
@@ -340,7 +358,6 @@ fun BalanceSummaryCard(
                     )
                 }
 
-                // Debit
                 Column(horizontalAlignment = Alignment.End) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
@@ -369,7 +386,11 @@ fun BalanceSummaryCard(
 }
 
 @Composable
-fun ExpenseItem(expense: Expense, onDelete: () -> Unit) {
+fun ExpenseItem(
+    expense: Expense,
+    onDelete: () -> Unit,
+    onEdit: () -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -383,48 +404,81 @@ fun ExpenseItem(expense: Expense, onDelete: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Credit/Debit indicator
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            color = if (expense.type == ExpenseType.CREDIT)
+                                GoldAccent.copy(alpha = 0.2f)
+                            else
+                                CharcoalBorder,
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
                     Icon(
-                        imageVector = if (expense.type == ExpenseType.CREDIT)
-                            Icons.Default.Add else Icons.Default.Delete,
+                        imageVector = ExpenseCategories.getIconForCategory(expense.category),
                         contentDescription = null,
                         tint = if (expense.type == ExpenseType.CREDIT)
-                            GoldAccent else Color(0xFFCF6679),
-                        modifier = Modifier.size(16.dp)
+                            GoldAccent
+                        else
+                            WhiteText,
+                        modifier = Modifier.size(20.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column {
                     Text(
                         text = expense.category,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = WhiteText
                     )
-                }
-                if (expense.description.isNotEmpty()) {
+                    if (expense.description.isNotEmpty()) {
+                        Text(
+                            text = expense.description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = SecondaryGray
+                        )
+                    }
                     Text(
-                        text = expense.description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = SecondaryGray
+                        text = formatDate(expense.date),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MutedGray
                     )
                 }
-                Text(
-                    text = formatDate(expense.date),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MutedGray
-                )
             }
 
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "${if (expense.type == ExpenseType.CREDIT) "+" else "-"}${formatCurrency(expense.amount)}",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = if (expense.type == ExpenseType.CREDIT) GoldAccent else WhiteText
-                )
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "${if (expense.type == ExpenseType.CREDIT) "+" else "-"}${
+                            formatCurrency(
+                                expense.amount
+                            )
+                        }",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = if (expense.type == ExpenseType.CREDIT) GoldAccent else WhiteText
+                    )
+                }
+
+                IconButton(onClick = onEdit) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = "Edit",
+                        tint = GoldAccent
+                    )
+                }
+
                 IconButton(onClick = onDelete) {
                     Icon(
                         Icons.Default.Delete,
@@ -446,13 +500,11 @@ fun AddExpenseDialog(
     var amount by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf(ExpenseType.DEBIT) }
     var selectedCategory by remember {
-        mutableStateOf(ExpenseCategories.debitCategories[0])
+        mutableStateOf(ExpenseCategories.debitCategories[0].name)
     }
     var description by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
-
-    // Selected date (default to current date)
     var selectedDateMillis by remember { mutableStateOf(System.currentTimeMillis()) }
 
     val categories = if (selectedType == ExpenseType.DEBIT)
@@ -460,7 +512,6 @@ fun AddExpenseDialog(
     else
         ExpenseCategories.creditCategories
 
-    // Date picker state
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = selectedDateMillis
     )
@@ -471,16 +522,14 @@ fun AddExpenseDialog(
         title = { Text("Add Transaction", color = WhiteText) },
         text = {
             Column {
-                // Type Selector (Credit/Debit)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Debit Button
                     Button(
                         onClick = {
                             selectedType = ExpenseType.DEBIT
-                            selectedCategory = ExpenseCategories.debitCategories[0]
+                            selectedCategory = ExpenseCategories.debitCategories[0].name
                         },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
@@ -499,11 +548,10 @@ fun AddExpenseDialog(
                         Text("Expense")
                     }
 
-                    // Credit Button
                     Button(
                         onClick = {
                             selectedType = ExpenseType.CREDIT
-                            selectedCategory = ExpenseCategories.creditCategories[0]
+                            selectedCategory = ExpenseCategories.creditCategories[0].name
                         },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
@@ -525,7 +573,6 @@ fun AddExpenseDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Date Selector
                 OutlinedButton(
                     onClick = { showDatePicker = true },
                     modifier = Modifier.fillMaxWidth(),
@@ -594,11 +641,29 @@ fun AddExpenseDialog(
                         onDismissRequest = { expanded = false },
                         modifier = Modifier.background(SoftBlack)
                     ) {
-                        categories.forEach { category ->
+                        val categoryItems = if (selectedType == ExpenseType.DEBIT)
+                            ExpenseCategories.debitCategories
+                        else
+                            ExpenseCategories.creditCategories
+
+                        categoryItems.forEach { categoryItem ->
                             DropdownMenuItem(
-                                text = { Text(category, color = WhiteText) },
+                                text = {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = categoryItem.icon,
+                                            contentDescription = null,
+                                            tint = GoldAccent,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Text(categoryItem.name, color = WhiteText)
+                                    }
+                                },
                                 onClick = {
-                                    selectedCategory = category
+                                    selectedCategory = categoryItem.name
                                     expanded = false
                                 }
                             )
@@ -642,7 +707,6 @@ fun AddExpenseDialog(
         }
     )
 
-    // Date Picker Dialog
     if (showDatePicker) {
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
@@ -690,7 +754,275 @@ fun AddExpenseDialog(
     }
 }
 
-// Helper functions
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditExpenseDialog(
+    expense: Expense,
+    onDismiss: () -> Unit,
+    onUpdate: (Expense) -> Unit
+) {
+    var amount by remember { mutableStateOf(expense.amount.toString()) }
+    var selectedType by remember { mutableStateOf(expense.type) }
+    var selectedCategory by remember { mutableStateOf(expense.category) }
+    var description by remember { mutableStateOf(expense.description) }
+    var expanded by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var selectedDateMillis by remember { mutableStateOf(expense.date) }
+
+    val categories = if (selectedType == ExpenseType.DEBIT)
+        ExpenseCategories.debitCategories
+    else
+        ExpenseCategories.creditCategories
+
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = selectedDateMillis
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = SoftBlack,
+        title = { Text("Edit Transaction", color = WhiteText) },
+        text = {
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            selectedType = ExpenseType.DEBIT
+                            selectedCategory = ExpenseCategories.debitCategories[0].name
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (selectedType == ExpenseType.DEBIT)
+                                CharcoalBorder else DeepBlack,
+                            contentColor = if (selectedType == ExpenseType.DEBIT)
+                                GoldAccent else SecondaryGray
+                        )
+                    ) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Expense")
+                    }
+
+                    Button(
+                        onClick = {
+                            selectedType = ExpenseType.CREDIT
+                            selectedCategory = ExpenseCategories.creditCategories[0].name
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (selectedType == ExpenseType.CREDIT)
+                                CharcoalBorder else DeepBlack,
+                            contentColor = if (selectedType == ExpenseType.CREDIT)
+                                GoldAccent else SecondaryGray
+                        )
+                    ) {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Income")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedButton(
+                    onClick = { showDatePicker = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = WhiteText
+                    ),
+                    border = ButtonDefaults.outlinedButtonBorder.copy(
+                        brush = androidx.compose.ui.graphics.SolidColor(CharcoalBorder)
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.DateRange,
+                        contentDescription = null,
+                        tint = GoldAccent,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        formatDateShort(selectedDateMillis),
+                        color = WhiteText
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = amount,
+                    onValueChange = { amount = it },
+                    label = { Text("Amount", color = SecondaryGray) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = WhiteText,
+                        unfocusedTextColor = WhiteText,
+                        focusedBorderColor = GoldAccent,
+                        unfocusedBorderColor = CharcoalBorder,
+                        cursorColor = GoldAccent
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = selectedCategory,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Category", color = SecondaryGray) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = WhiteText,
+                            unfocusedTextColor = WhiteText,
+                            focusedBorderColor = GoldAccent,
+                            unfocusedBorderColor = CharcoalBorder
+                        )
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.background(SoftBlack)
+                    ) {
+                        val categoryItems = if (selectedType == ExpenseType.DEBIT)
+                            ExpenseCategories.debitCategories
+                        else
+                            ExpenseCategories.creditCategories
+
+                        categoryItems.forEach { categoryItem ->
+                            DropdownMenuItem(
+                                text = {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = categoryItem.icon,
+                                            contentDescription = null,
+                                            tint = GoldAccent,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Text(categoryItem.name, color = WhiteText)
+                                    }
+                                },
+                                onClick = {
+                                    selectedCategory = categoryItem.name
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Description (Optional)", color = SecondaryGray) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = WhiteText,
+                        unfocusedTextColor = WhiteText,
+                        focusedBorderColor = GoldAccent,
+                        unfocusedBorderColor = CharcoalBorder,
+                        cursorColor = GoldAccent
+                    )
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val amountValue = amount.toDoubleOrNull()
+                    if (amountValue != null && amountValue > 0) {
+                        val updatedExpense = expense.copy(
+                            amount = amountValue,
+                            category = selectedCategory,
+                            description = description,
+                            type = selectedType,
+                            date = selectedDateMillis
+                        )
+                        onUpdate(updatedExpense)
+                    }
+                }
+            ) {
+                Text("Update", color = GoldAccent)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = SecondaryGray)
+            }
+        }
+    )
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let {
+                            selectedDateMillis = it
+                        }
+                        showDatePicker = false
+                    }
+                ) {
+                    Text("OK", color = GoldAccent)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel", color = SecondaryGray)
+                }
+            },
+            colors = DatePickerDefaults.colors(
+                containerColor = SoftBlack
+            )
+        ) {
+            DatePicker(
+                state = datePickerState,
+                colors = DatePickerDefaults.colors(
+                    containerColor = SoftBlack,
+                    titleContentColor = WhiteText,
+                    headlineContentColor = WhiteText,
+                    weekdayContentColor = SecondaryGray,
+                    subheadContentColor = SecondaryGray,
+                    yearContentColor = WhiteText,
+                    currentYearContentColor = GoldAccent,
+                    selectedYearContentColor = DeepBlack,
+                    selectedYearContainerColor = GoldAccent,
+                    dayContentColor = WhiteText,
+                    selectedDayContentColor = DeepBlack,
+                    selectedDayContainerColor = GoldAccent,
+                    todayContentColor = GoldAccent,
+                    todayDateBorderColor = GoldAccent
+                )
+            )
+        }
+    }
+}
+
 fun formatCurrency(amount: Double): String {
     val format = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
     return format.format(amount)
